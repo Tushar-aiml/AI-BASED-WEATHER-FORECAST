@@ -1,0 +1,37 @@
+from jade.core import Agent, ACLMessage
+from jade.domain import FIPAAgentManagement
+
+class MyAgent(Agent):
+    def setup(self):
+        self.add_behaviour(MyBehaviour(self))
+
+class MyBehaviour(FIPAAgentManagement.CyclicBehaviour):
+    def __init__(self, agent):
+        super().__init__(agent)
+
+    def action(self):
+        msg = self.receive()
+        if msg:
+            print(f"Received message: {msg.content}")
+            reply = ACLMessage(ACLMessage.INFORM)
+            reply.set_content("Pong")
+            reply.add_receiver(msg.get_sender())
+            self.send(reply)
+
+# Start the agent
+agent_name = "AgentOne"
+container_name = "MyContainer"
+jade.core.Agent.start_container(container_name)
+my_agent = jade.core.Agent.create_agent(agent_name, MyAgent)
+my_agent.start()
+
+# Create and start another agent
+agent_name_2 = "AgentTwo"
+my_agent_2 = jade.core.Agent.create_agent(agent_name_2, MyAgent)
+my_agent_2.start()
+
+# Send a message from AgentOne to AgentTwo
+message = ACLMessage(ACLMessage.INFORM)
+message.set_content("Ping")
+message.add_receiver(my_agent_2.get_ait().get_aid())
+my_agent.send(message)
